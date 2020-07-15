@@ -12,29 +12,23 @@ hostname = os.uname()[1]
 app = Flask(__name__)
 
 def sysstat(metric): 
-    cmd = ""
 
-    if metric == "cpu": 
-        cmd = 'sadf -g -- -u'
-    elif metric == "load": 
-        cmd = 'sadf -g -- -q LOAD'
-    elif metric == "mem": 
-        cmd = 'sadf -g -- -r'
-    elif metric == "io": 
-        cmd = 'sadf -g -- -d'
-    elif metric == "net": 
-        cmd = 'sadf -g -- -n ALL'
-    elif metric == "temp": 
-        cmd = 'sadf -g -- -m TEMP'
-    elif metric == "fan": 
-        cmd = 'sadf -g -- -m FAN'
+    # List of sar(1) options
+    cmds = {
+        'cpu'   : '-u', 
+        'load'  : '-q LOAD', 
+        'mem'   : '-r', 
+        'io'    : '-d', 
+        'net'   : '-n ALL', 
+        'temp'  : '-m TEMP', 
+        'fan'   : '-m FAN'
+    }
 
-    # If the metric is defined, execute the sar command: 
-    if cmd != "": 
-        svg = os.popen(cmd).read()
+    # When the metric is validated, run the sar command 
+    if metric in cmds: 
+        svg = os.popen("sadf -T -g -O showtoc,skipempty -- " + cmds[metric]).read()
     else: 
-        svg = "Metric not found!"
-
+        svg = "<h1>Metric not found!</h1><p>Please try another metric type...</p>"
     return svg
     
 
@@ -44,8 +38,7 @@ def menu():
 
 @app.route("/sysstat/<string:metric>")
 def get_metrics(metric): 
-    svg = sysstat(metric)
-    return svg
+    return sysstat(metric)
 
 
 if __name__ == "__main__": 
